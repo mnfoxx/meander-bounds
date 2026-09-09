@@ -1,0 +1,458 @@
+% ------------------------------------------------------------------
+% Transfer-matrix bounds for meanders and stamp foldings
+% Draft 5 (submission candidate) — 9 September 2026
+%
+% TODO before submission (see also the list at the end of the file):
+%  [x] author block confirmed
+%  [x] bibliography verified against Crossref/INSPIRE/publisher pages (9 Sept 2026) EXCEPT: DFGG00 page range (699-712) and BRS issue/DOI (CACM 59(7), doi 10.1145/2851485) still from memory; DGZZ volume/pages to be filled when assigned
+%  [x] literature pass done (zbMATH API, Crossref, arXiv, OEIS; 9 Sept 2026): only AP 2005 for R; Uehara 2011 Thm 2 (F(n)=Omega(3.06^n), O(4^n); Lemma 3 uses s(43)^(1/43)=3.06549, Lemma 2 uses k C_k^2) for foldings — chapter read in full; Reeds–Shepp–McIlroy 1999 (13.01).
+%  [x] La Croix (2003) checked: no such identity; Belousov (2021) has a different prime factorisation — both cited
+%  [ ] optionally replace the headline numbers by the large-machine runs
+%  [x] AI declaration in place (Elsevier-style titled section above the references)
+% ------------------------------------------------------------------
+\documentclass[11pt]{amsart}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[expansion=false]{microtype}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!60!black,citecolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{enumitem}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{observation}[theorem]{Observation}
+
+\newcommand{\R}{R}
+\newcommand{\Rb}{\bar R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\Rr}{\mathbb R}
+\newcommand{\Tm}{T}
+\newcommand{\ttop}{^{\!\top}}
+\newcommand{\Aut}{\mathcal A}
+\newcommand{\Rel}{\mathcal R}
+\newcommand{\Win}{\mathcal W}
+\newcommand{\Mm}{\mathcal M}
+\newcommand{\Ss}{\mathcal S}
+\newcommand{\op}{\mathsf{o}}
+\newcommand{\cl}{\mathsf{c}}
+\newcommand{\qq}{\mathord{?}}
+\DeclareMathOperator{\rank}{rank}
+
+\title[Transfer-matrix bounds for meanders]{Transfer-matrix bounds for meanders and stamp foldings:\\ $11.5975\le R\le 12.6319$ and $\bar R\le 3.5542$}
+\author{Micherre Fox}
+\address{New York, NY}
+\email{micherrefox@gmail.com}
+\date{September 2026}
+
+\begin{document}
+
+\begin{abstract}
+Let $M_k$ be the number of closed meanders of order $k$ and $s(n)$ the number of semi-meanders of $n$ stamps (equivalently, foldings of a strip of $n$ stamps with the first stamp on top, so that $n\,s(n)$ counts all stamp foldings). Their growth constants $R=\lim M_k^{1/k}$ and $\Rb=\lim s(n)^{1/n}$ are famous open quantities, numerically $R\approx12.2629$ and $\Rb\approx3.5019$, conjecturally related by $\Rb=\sqrt R$. The best rigorous bounds, $11.380\le R\le12.901$ (Albert and Paterson, 2005), have stood for twenty years, and no rigorous upper bound below the trivial $4$ seems to have been recorded for $\Rb$. We prove
+\[
+11.5975\ \le\ R\ \le\ 12.6319,\qquad \Rb\ \le\ 3.5542,
+\]
+by two certified transfer-matrix computations on a desktop-class machine. For the lower bound we truncate Jensen's transfer matrix to a finite set of states and certify a Perron eigenvector in exact integer arithmetic; the novelty is that the set of states is chosen adaptively by Perron mass, in the manner of selected configuration interaction in quantum chemistry, which is worth about one width step of the classical truncation per unit of memory. For the upper bounds we forget the path labels of deep arcs: the resulting finite automaton accepts every meander and every folding, and its Perron root, again certified, bounds both constants from above. We also give exact rational generating functions for meanders and semi-meanders of bounded height (with closed forms at height two), a decomposition of the semi-meander automaton into an open-meander phase and a closed-meander phase, a sandwich theorem for their growth constants, and a proof that the bounded-height constants converge to $\sqrt R$. Several natural refinements that we tried and rejected, and one convergence question we could not settle, are recorded.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+A \emph{closed meander of order $k$} is a closed self-avoiding curve in the plane crossing a fixed line (the river) at exactly $2k$ points, considered up to isotopy preserving the line. A \emph{semi-meander} of order $n$ is a closed curve crossing a half-line $n$ times; equivalently \cite{Koehler,Lunnon,Legendre} it is a way of folding a strip of $n$ stamps into a pile with stamp $1$ on top, and $n$ times the number of semi-meanders is the number of all foldings of the strip (the \emph{stamp-folding numbers}). Writing $M_k$ and $s(n)$ for the two counts (OEIS A005315 and A000682), the sequences begin
+\[
+M_k:\ 1,2,8,42,262,1828,13820,\dots\qquad s(n):\ 1,1,2,4,10,24,66,174,504,1406,\dots
+\]
+Both are classical, both are hard, and neither has a closed form. Lando and Zvonkin \cite{LandoZvonkin} proved that $R=\lim_k M_k^{1/k}$ exists; the semi-meander limit $\Rb=\lim_n s(n)^{1/n}$ exists as well (see \S\ref{sec:prelim}). Jensen's transfer-matrix enumerations \cite{Jensen2000,JensenGuttmann} give the estimates $R\approx12.2629$ and $\Rb\approx3.5019$ (and $M_k$ is known exactly to $k=28$ \cite{OEIS}), and Di Francesco, Golinelli and Guitter \cite{DFGG96,DFGGTL} conjecture $\Rb=\sqrt R$ on the basis of a folding interpretation and extensive numerics. Rigorous information is much scarcer. An unpublished manuscript of Reeds, Shepp and McIlroy \cite{ReedsShepp} obtained the upper bound $13.01$; Albert and Paterson \cite{AlbertPaterson} proved $11.380\le R\le12.901$ by exhibiting, respectively, a language of ``shifts'' contained in the meander language and a set of forbidden factors containing it; these bounds are still quoted as the best known in recent work \cite{DGZZ}. For $\Rb$ the recorded rigorous information is due to Uehara \cite[Theorem~2]{Uehara}: the number $F(n)=n\,s(n)$ of foldings satisfies $F(n)=\Omega(3.06^n)$ and $F(n)=O(4^n)$, i.e.\ $3.065\le\Rb\le4$. His lower bound is a Fekete-type gluing argument applied to the exact value $s(43)$, and is weaker than the easy inequality $\Rb\ge\sqrt R\ge3.373$ (a meander of order $k$ is a semi-meander of order $2k$); his upper bound is the count $k\,C_k^2$ of pairs of non-crossing matchings, which ignores connectivity altogether. Legendre's survey of the folding sequences \cite{Legendre} lists nothing sharper, and a zbMATH search (September 2026) over meanders, semi-meanders and stamp foldings finds no other rigorous bound on either constant. Theorem~\ref{thm:upper} is thus the first upper bound on $\Rb$ that charges for connectivity at all.
+
+\subsection*{Main results}
+
+\begin{theorem}[lower bound]\label{thm:lower}
+$R\ge 11.59753$. Consequently $\Rb\ge\sqrt R\ge 3.4055$.
+\end{theorem}
+
+\begin{theorem}[upper bounds]\label{thm:upper}
+$R\le 12.63185$ and $\Rb\le\sqrt{12.63185}=3.55414$.
+\end{theorem}
+
+Both theorems are proved by computation, in the sense made standard by Barequet, Rote and Shalah for the polyomino constant \cite{BRS}: a program finds a candidate vector by floating-point power iteration, an exact integer computation verifies the one inequality that the mathematical argument requires, and the mathematical argument (a few lines in each case) is what turns that inequality into a bound. The certificates are small enough to be re-checked by independent code, and we did so.
+
+The interest of the theorems is not only in the digits. For the lower bound, the method is the width truncation of Jensen's transfer matrix, which Albert and Paterson did not use and which is better than their language construction already at moderate width; the new ingredient is an \emph{adaptive} choice of the states retained, driven by their Perron mass, which reaches the accuracy of a width cut roughly one step larger at the same memory (\S\ref{sec:adaptive}). For the upper bounds the method is new in this context and remarkably cheap: forgetting the path labels of all but the shallowest $m$ open arcs gives a finite automaton that accepts every meander and every stamp folding, so its Perron root is an upper bound on both constants; with $m=7$ per side and $4\,301$ states, a few seconds of computation already improve the 2005 bound (\S\ref{sec:upper}). The semi-meander bound in Theorem~\ref{thm:upper} cannot be obtained from the meander bound, since $\Rb\le\sqrt R$ is precisely the open direction of the conjecture; it comes from the same relaxation applied to the folding automaton.
+
+The paper also contains exact results for bounded height. Both meanders and semi-meanders become regular languages when the number of arcs stacked on either side of the river (the \emph{height}) is bounded, so their generating functions are rational, and we compute them: at height $2$ the three families have the closed forms $2^{k-1}$ (closed meanders), Fibonacci numbers (open meanders) and $2F_{n+2}-c\,2^{n/2}$ (semi-meanders), all three faces of one five-state automaton; at heights $3$ and $4$ we give the rational functions or their denominators (\S\ref{sec:exact}). The semi-meander automaton decomposes at the position of the last stamp into a rooted phase, whose diagonal counts open meanders, and a rootless phase which is exactly the closed-meander transfer matrix read upwards; the two phases' growth constants satisfy a sandwich inequality, and both converge to $\sqrt R$ (\S\ref{sec:structure}). That last fact is essentially known in the language of \cite{DFGG96}, and we say so.
+
+Finally we record what did not work. A tilted certificate, coarse identities for forgotten arcs, alternative forgetting rules and an adaptive coarsening for the upper bound; infinite-support ``window'' certificates for the lower bound, which turn out to require a summability condition and then gain only a constant factor; and the prime-meander decomposition $M(x)=P(x)/(1-2P(x))$, whose pole is never reached. We also could not decide whether the forgetting bounds converge to $R$ as the memory grows, and we state this as a question with the evidence on both sides (\S\ref{sec:convergence}). We include these because a reader who asks ``why not do the obvious next thing?'' deserves an answer, and because in a computational paper the record of what was tried is part of the result.
+
+\subsection*{Organisation} Section~\ref{sec:prelim} fixes the arch model and the transfer matrices. Section~\ref{sec:lower} proves Theorem~\ref{thm:lower}, Section~\ref{sec:upper} Theorem~\ref{thm:upper}. Section~\ref{sec:exact} contains the exact generating functions and Section~\ref{sec:structure} the phase decomposition and sandwich theorem. Section~\ref{sec:tried} collects the negative results and Section~\ref{sec:convergence} the open question. Section~\ref{sec:repro} describes the code and certificates.
+
+\section{Arch systems, foldings and their transfer matrices}\label{sec:prelim}
+
+\subsection{Meanders as pairs of matchings}
+Cut a closed meander of order $k$ along the river. Above the river the curve becomes a non-crossing matching of the $2k$ crossing points (an \emph{arch system}), and below the river another; the curve is recovered as the union of the two, and it is a single closed curve iff the union of the two matchings is a single cycle. Thus $M_k$ is the number of pairs of non-crossing matchings on $2k$ points on a line whose union is connected. Dropping connectivity, the number of pairs is $C_k^2$, $C_k$ the $k$-th Catalan number, of growth $16$ per order; the meander constant $R\approx12.26$ measures the cost of connectivity.
+
+An \emph{open meander} with $m$ crossings is an infinite curve (the road) crossing the river $m$ times, counted by A005316; \emph{semi-meanders} are closed curves crossing a half-line, or, via the folding interpretation recalled next, foldings.
+
+\subsection{Foldings and the arch model}\label{sub:arch}
+Fold a strip of stamps labelled $1,\dots,n$ into a pile, stamp $1$ on top, and record the position $p(i)\in\{1,\dots,n\}$ of stamp $i$ from the top. The crease between stamps $i$ and $i+1$ lies on one edge of the pile, consecutive creases on opposite edges; normalise so that crease $i$ is on the right for odd $i$ and on the left for even $i$, and draw it as an arc on that side joining positions $p(i)$ and $p(i+1)$. A classical fact (Sainte-Lagu\"e, Koehler \cite{Koehler}, Lunnon \cite{Lunnon}) is that a permutation $p$ arises from a physical folding iff the arcs on each side are pairwise non-crossing. Every stamp other than $1$ and $n$ has one arc on each side, so:
+
+\begin{lemma}\label{lem:arch}
+Semi-meanders of $n$ stamps are in bijection with pairs $(M_R,M_L)$ of non-crossing matchings on $\{1,\dots,n\}$ such that $M_L$ leaves position $1$ unmatched, exactly one further position $q$ is unmatched by exactly one of the two matchings, every other position is matched by both, and $M_R\cup M_L$ is acyclic.
+\end{lemma}
+
+\begin{proof}
+An acyclic graph on $n$ vertices with $n-1$ edges and maximum degree $2$ is a Hamiltonian path; its ends are the two degree-one vertices, position $1$ and $q$. Reading labels along the path from position $1$ determines the folding, sides alternating because interior vertices have one arc per side and the first arc is on the right. The converse is the Fact above.
+\end{proof}
+
+The stamp at $q=p(n)$ is the last stamp. Reading the pile from the top, position $1$ starts the \emph{root} path (one loose end), position $q$ starts the \emph{tail} path, and all other paths have two loose ends until they are joined.
+
+\subsection{The scan automaton}\label{sub:scan}
+Process the $n$ positions from the top (for meanders, the $2k$ crossings from the left). At each position each side sees one \emph{event}: \emph{open} (push a new arc on that side's stack), \emph{close} (pop the top arc: non-crossing forces the innermost open arc to be the one closed), or, for foldings only, \emph{absent} at position $1$ (left side) and at position $q$ (one side). The \emph{state} after $t$ positions is the pair of stacks with each open arc labelled by the path it belongs to, up to renaming of paths. A close attaches the current stamp to the path owning the popped arc; two closes at one position join two paths, which is forbidden if they are the same path (a cycle) except at the final position, when it closes the single curve; opens push the current path's label. A word of events is \emph{accepted} if it ends with both stacks empty after the single final cycle closure.
+
+For closed meanders every path has two loose ends and there are no absent events; the states are the pairs of stacks with a non-crossing pairing of their entries, and the transition rule is the one above. This is Jensen's transfer matrix \cite{Jensen2000} in the language of automata. Two facts about the state space will be used.
+
+\begin{lemma}\label{lem:states}
+The states of the closed-meander automaton with $p$ open paths (width $2p$) are exactly the non-crossing pairings of the $2p$ arc positions on the cut line, taken with the split into upper and lower stack; there are $\binom{2p+1}{p}$ of them, all reachable from the empty state, and every state of width $w$ is reachable in at most $w$ crossings.
+\end{lemma}
+
+\begin{proof}
+Necessity of non-crossing on the cut line is planarity. Reachability and the length bound were verified exhaustively for $w\le10$ (all $3,10,35,126,462$ configurations); the general construction opens each pair with both ends on different sides by one (open,open) event and each pair with both ends on the same side by an (open,open) followed later by a transfer (open,\,close) of the temporary arc, processing nested blocks from the inside out, which uses at most one crossing per arc.
+\end{proof}
+
+The automaton is bipartite (the parity of the upper stack height alternates), so the natural object is the square of its transition matrix, and we quote growth constants \emph{per order}, i.e.\ per two crossings, for $R$, and per crossing (per position) for $\Rb$.
+
+\subsection{Mirror quotient}
+Swapping the two sides of the river is an involution $P$ of the state space commuting with the transition matrix $T$. All computations below are done on the quotient by $P$: for orbits $a,b$ let $E(a,b)$ be the number of transitions from a fixed representative of $a$ into states of $b$. For \emph{right} vectors (upper bounds) the lift $\tilde w_t=w_{\mathrm{orb}(t)}$ satisfies $(T\tilde w)_s=\sum_bE(a,b)w_b$ directly. For \emph{left} vectors (lower bounds) one needs orbit sizes: from $T[Ps][Pt]=T[s][t]$ the number of transitions from all states of $a$ into a fixed $t\in b$ is $E(a,b)|a|/|b|$, so if $y>0$ on orbits satisfies $(E\ttop)^2y\ge c\,y$ then $v_t:=y_b/|b|$ satisfies $(T\ttop)^2v\ge c\,v$ on the full automaton. Both lifts were checked numerically against unquotiented runs.
+
+\section{Lower bounds}\label{sec:lower}
+
+\subsection{Certificates on a sub-automaton}
+Let $T$ be the transition matrix of the closed-meander automaton and $j_0$ the one-path state $((1),(1))$, from which the accepting event is available immediately. For a finite set $S$ of states write $T_S$ for the restriction (transitions with both ends in $S$).
+
+\begin{lemma}\label{lem:cert}
+Let $S$ be a finite set of states containing $j_0$, and let $S'\subseteq S$ be the states reachable from $j_0$ by walks inside $S$. If $v\ge0$ is an integer vector on $S'$ with $v_{j_0}>0$ and $(T_{S'}\ttop)^2v\ge c\,v$ entrywise, then $R\ge c$.
+\end{lemma}
+
+\begin{proof}
+Iterating, $(T_{S'}\ttop)^{2n}v\ge c^nv$. The $j_0$ entry reads $\sum_iv_i\,N_{2n}(i\to j_0)\ge c^nv_{j_0}$, where $N_{2n}(i\to j_0)$ counts walks of length $2n$ inside $S'$; hence some $i\in S'$ has at least $c^nv_{j_0}/\|v\|_1$ such walks. Prefix the one-crossing walk $\varnothing\to j_0$ and a fixed walk $j_0\to i$ inside $S'$ of length $\ell_i\le L$ ($L$ finite since $S'$ is), append the accepting event; each counted walk becomes a distinct closed meander of order $(2+\ell_i+2n)/2$, and $\ell_i$ is even by bipartiteness. So for each $n$ some order $k\in[n+1,n+1+L/2]$ has $M_k\ge c^nv_{j_0}/\|v\|_1$, and $M_k^{1/k}\to R$ gives $R\ge c$.
+\end{proof}
+
+No property of how $S$ was chosen enters the proof, and the restriction to $S'$ means a checker needs nothing but the list $S$ and the vector $v$: it re-derives the transitions of the listed states, computes $S'$ by breadth-first search from $j_0$, and evaluates $(T\ttop)^2v$ in exact integers. In practice $v$ is a floating-point Perron vector of $T_S^2$ rounded \emph{down} to integers at scale $2^{52}$, and $c$ is the minimum over $i$ with $v_i>0$ of $((T\ttop)^2v)_i/v_i$, computed with $128$-bit integers. Since $c\le\rho(T_S^2)$ with equality iff $v$ is the Perron vector, rounding and incomplete convergence only weaken the bound, never invalidate it.
+
+\subsection{Width truncation}\label{sub:width}
+The classical choice is $S=\{\text{width}\le W\}$ \cite{Jensen2000}. The automaton was validated against a brute-force enumeration of pairs of non-crossing matchings (widths $\le4,6,8$ give $38,184,890$; $42,258,1700$; $42,262,1824$ closed meanders of orders $4,5,6$, as they must), and the quotient reproduces the unquotiented certificates at $W=20$ and $24$ to the last digit.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrl}
+\toprule
+$W$ & orbit-states & $\rho(T_S^2)$ & certified $R\ge$\\
+\midrule
+20 & 239\,359 & 11.0449 & 11.04139\\
+22 & 915\,629 & 11.2129 & 11.20795\\
+24 & 3\,516\,241 & 11.3487 & 11.34221\\
+26 & $\approx$13.5 M & 11.4538 & 11.45295\\
+28 & 52\,327\,345 & 11.5453 & 11.54507\ \ ($4367716392/378318673$)\\
+\bottomrule
+\end{tabular}
+\caption{Width truncation (mirror quotient). The certified increments $0.167,0.134,0.109,0.092$ shrink by $\approx0.83$ per step; $W=28$ needs $2.5$~GB and five checkpointed legs of $170$ power iterations.}\label{tab:width}
+\end{table}
+
+The Perron mass $a_ib_i$ (product of left and right eigenvector entries) of the $W=24$ automaton by width is $0.3,1.2,3.3,6.9,11.6,15.9,18.3,17.7,13.9,8.2,2.8$ percent for widths $4,6,\dots,24$: it peaks near width $16$ and only $3\%$ sits on the boundary, which is why each width step gains a fixed fraction of the previous one. The mass moves outward as $W$ grows: the entropy of meanders lives at large width, and no finite truncation converges faster than polynomially.
+
+\subsection{Adaptive selection of states}\label{sec:adaptive}
+Lemma~\ref{lem:cert} allows any $S$. For an irreducible non-negative matrix with left and right Perron vectors $a,b$ normalised by $a\ttop b=1$, $\partial\rho/\partial T_{ij}=a_ib_j$, so deleting state $i$ changes $\rho$ to first order by $-(2\rho-T_{ii})a_ib_i$: the mass $m_i=a_ib_i$ is the natural importance of a state, and a state $t\notin S$ can be scored by the same product with its Perron entries estimated from its neighbours inside $S$,
+\begin{equation}\label{eq:score}
+\hat a_t=\frac1\rho\sum_{i\in S}a_iT_{it},\qquad\hat b_t=\frac1\rho\sum_{j\in S}T_{tj}b_j,\qquad \mathrm{score}(t)=\hat a_t\hat b_t.
+\end{equation}
+This is the selection rule of the CIPSI family of selected-configuration-interaction methods in quantum chemistry \cite{CIPSI}, transplanted to a non-symmetric transfer matrix (left and right vectors differ). The procedure is:
+\begin{enumerate}[nosep]
+\item start from all states of width $\le W_0$ ($W_0=20$);
+\item power-iterate $T_S^2$ from a warm start to get $a,b$;
+\item enumerate the one-step frontier $F=\{t\notin S:T_{it}>0\text{ for some }i\in S\}$ (capped at width $32$), score it by \eqref{eq:score}, and keep the top $K$ of $S\cup F$ (a log-scale histogram supplies the threshold, so only one chunk of $F$ is ever in memory);
+\item rebuild the transitions inside the new $S$ and repeat.
+\end{enumerate}
+Two practical points matter. Since only a one-step frontier is scored, the set must be grown and pruned \emph{repeatedly}: a schedule of ``expand, expand, prune to $K$'' cycles with $K$ growing geometrically produces a far better core than a single expansion of a width cut (at $13$--$15\cdot10^6$ states, the once-expanded width-$24$ set certifies $11.450$, the annealed core $11.485$). And the expansion of a good core by its full one- or two-step frontier is itself an excellent state set: it adds exactly the states whose absence caps the pruned core.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrl}
+\toprule
+state set & orbit-states & $\rho(T_S^2)$ & certified $R\ge$\\
+\midrule
+width $\le24$ & 3.52 M & 11.3487 & 11.342\\
+adaptive, 3 cycles & 3.50 M & 11.4102 & 11.40008\\
+width $\le26$ & 13.5 M & 11.4538 & 11.45295\\
+adaptive, pruned & 14.05 M & 11.5186 & 11.489 (50 it.)\\
+width $\le28$ & 52.3 M & 11.5453 & 11.54507\\
+adaptive, pruned & 30.07 M & 11.5529 & 11.54774\\
+adaptive, pruned & 40.06 M & 11.5969 & 11.58363\\
+adaptive, core $30$ M $+$ frontier & 58.40 M & 11.5990 & \textbf{11.59753}\\
+\bottomrule
+\end{tabular}
+\caption{Adaptive selection versus width truncation. Entries marked ``$n$ it.'' are certificates taken after $n$ warm-started iterations at intermediate stages; the last row is the final set re-iterated to convergence ($550$ iterations). All runs fit in $7$~GB.}\label{tab:adaptive}
+\end{table}
+
+Per state, the adaptive sets are worth about one width step: $14\cdot10^6$ selected states certify more than width $26$ ($13.5\cdot10^6$) by $0.065$ where the $26\to28$ step is $0.092$; $30\cdot10^6$ already beat width $28$ ($52\cdot10^6$); and $58\cdot10^6$ give $11.5975$, roughly what the extrapolation of Table~\ref{tab:width} predicts for width $30$ at $4\cdot10^8$ states. The final set keeps essentially all states of width $\le22$, $89\%$ of width $24$, $68\%$ of $26$, $38\%$ of $28$, and, where the gain comes from, about $13\%$ of width $30$ and $2\%$ of width $32$, layers a width cut can only buy wholesale.
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower}]
+The final set $S$ has $58\,398\,791$ orbit-states, all of width $\le32$, and the certificate vector $v$ (integers of size $\le2^{52}$) satisfies
+\[
+\min_{i:\,v_i>0}\frac{((T_{S'}\ttop)^2v)_i}{v_i}=\frac{3500486230016}{301830176768}=11.5975356\ldots
+\]
+with $S'=S$ (every listed state is reachable from $j_0$ inside $S$) and $v_{j_0}>0$; this was computed by the program that produced $v$ and re-computed by an independently written checker (\S\ref{sec:repro}). Lemma~\ref{lem:cert} and the quotient lift give $R\ge11.59753$. The corollary $\Rb\ge\sqrt R$ is the inequality $M_k\le s(2k)$: a closed meander is a semi-meander of zero winding.
+\end{proof}
+
+\subsection{Two things that do not help}\label{sub:lowertried}
+\emph{Infinite-support certificates.} Since Lemma~\ref{lem:cert} puts weight zero outside $S$, one may ask for a vector $v>0$ on \emph{all} states, depending only on the top $k$ entries of each stack (a ``window'') and decaying like $\theta^{d}$ in the number $d$ of deeper arcs, verified pattern by pattern by taking the worst case over the hidden entries. This is sound only under a decay condition:
+
+\begin{proposition}\label{prop:window}
+Let $v\ge0$ on all states, $v_{j_0}>0$, $(T\ttop v)_t\ge c\,v_t$ for every state $t$, and $v_i\le C\,x^{w(i)}$ for some $x<1/c$, $w(i)$ the width. Then $R\ge c^2$.
+\end{proposition}
+
+\begin{proof}
+As in Lemma~\ref{lem:cert}, $\sum_iv_iN_n(i\to j_0)\ge c^nv_{j_0}$. Prefix each walk by a shortest walk $\varnothing\to i$, of length $\ell_i\le w(i)$ by Lemma~\ref{lem:states}; for fixed $n$ and $\ell$ the map to meanders is injective on $\{i:\ell_i=\ell\}$, and a meander of order $k$ arises from at most $2k$ pairs $(\ell,n)$. So $\sum_k2kM_kx^{2k}\ge\sum_nx^{n+1}\sum_ix^{\ell_i}N_n(i\to j_0)\ge C^{-1}\sum_nx^{n+1}c^nv_{j_0}$, which diverges if $xc\ge1$; hence $\sum_kM_kx^{2k}$ diverges for every $x\in(1/c,1/\sqrt R)$, so this interval is empty.
+\end{proof}
+
+The condition is not a technicality: walks of the automaton that never return to $\varnothing$ can grow faster than $\sqrt R$ per crossing (those ending at width $\varepsilon n$ are bounded only by $R^{(1+\varepsilon)/2}$), so a slowly decaying $v$ may certify a growth that is not the growth of meanders. The ansatz is therefore forced to $\theta<1/\sqrt R\approx0.29$, whereas the true Perron vector decays at roughly $0.67$ per arc. We implemented the scheme (a max--min problem for a concave monotone homogeneous operator, solved by bisection with the decreasing iteration $g\leftarrow\min(g,\Phi g/c)$; plain power iteration converges to a spurious fixed point). At $\theta=0$ it reproduces the per-side height truncation; at the best admissible $\theta$ the gains over it, per crossing, are $+0.39,+0.18,+0.10,+0.08,+0.06$ for window sizes $2$ to $6$: real, but shrinking, and settling at about half of one step of the truncation family. The adversarial minimum over hidden completions is what caps it, exactly as the maximum over completions is what makes forgetting cheap in \S\ref{sec:upper}. We did not build the total-window variant or layer it on the adaptive set (an estimated $+0.04$ on Theorem~\ref{thm:lower}) because it cannot change the convergence law.
+
+\emph{Prime meanders.} Lando and Zvonkin's sewing product \cite{LandoZvonkin} --- cut the upper arc at the last crossing of $A$ and the upper arc at the first crossing of $B$, reconnect crosswise --- together with its lower-arc mirror, has unique factorisation: with $P(x)=\sum P_kx^k$ counting meanders that are not a product ($P_k=1,0,4,18,126,916,7204,59618,\dots$), every meander is uniquely a sequence of primes joined by upper or lower sewings, and
+\begin{equation}\label{eq:prime}
+M(x)=\frac{P(x)}{1-2P(x)}\qquad(\text{verified for }k\le7\text{ by brute force}).
+\end{equation}
+We have not found this identity in the literature; La Croix's survey \cite{LaCroix} states that no elementary composition rule for meanders is known, and Belousov \cite{Belousov} proves unique factorisation for a different notion of prime meander (disk surgery), with more complicated recurrences. Since $M(1/R)<\infty$ ($M_k\sim R^kk^{-\alpha}$ with $\alpha\approx3.42$ \cite{DFGG00,JensenGuttmann}), $2P(1/R)<1$: the pole is never reached, $P$ and $M$ have the same radius, $P_k/M_k$ tends to a constant ($0.64$ at $k=28$ and rising), and the lower bound $R\ge1/x^*$, $2\sum_{k\le K}P_kx^{*k}=1$, obtained from the $28$ known terms of $M_k$ (Jensen \cite{Jensen2000} to $k=24$, A.~Howroyd to $k=28$ \cite{OEIS}) is only $8.45$. Concatenation carries no entropy; the entropy of meanders is in structures that connect to their surroundings, which is exactly what a state of the transfer matrix records.
+
+\section{Upper bounds by forgetting}\label{sec:upper}
+
+The labels in the scan automaton are used for one thing only: to refuse the move that would close a cycle. Forgetting labels therefore yields an automaton accepting every meander and some non-meanders, whose growth rate is an upper bound; with a finite memory it is a finite automaton, so the bound is computable, and it improves with memory without any state being discarded.
+
+\subsection{The relaxed automaton $\Rel_m$}
+A \emph{partial state} consists of an upper and a lower stack whose entries are labels or the symbol $\qq$, every label occurring exactly twice in total. Events $(e_U,e_L)\in\{\op,\cl\}^2$ act as follows.
+\begin{enumerate}[nosep]
+\item A close pops its stack; the event is \emph{refused} only if both events are closes and the two popped entries carry the same label.
+\item If both popped entries are labels $a\ne b$, every remaining $b$ is renamed $a$; if one is $\qq$, nothing is renamed.
+\item An opened arc receives the label of the popped arc if exactly one arc was popped and it was labelled, and a fresh label otherwise; two arcs opened together share a fresh label.
+\item \emph{Reduction:} every label now occurring once becomes $\qq$; $\qq$ entries at the bottom of a stack are deleted; while the total number of entries exceeds the memory $m$, the deepest entry of the taller stack is deleted, and the previous two steps are repeated.
+\end{enumerate}
+A reduced state has at most $m$ entries and $m/2$ labels, so $\Rel_m$ is finite; in the mirror quotient it has $58\,043$ states at $m=16$, $4.23\cdot10^6$ at $m=22$, $17.6\cdot10^6$ at $m=24$ and $72.8\cdot10^6$ at $m=26$.
+
+\begin{definition}
+A partial state $r$ \emph{covers} an exact state $s$ if, on each side, the entries of $r$ are the top $|r|$ entries of $s$ with $\qq$ matching anything, and equal labels in $r$ lie on the same path in $s$.
+\end{definition}
+
+\begin{lemma}[soundness]\label{lem:sound}
+For every exact transition $s\to t$ under an event $e$ and every partial state $r$ covering $s$, the event $e$ is accepted by $\Rel_m$ from $r$ and leads to a state covering $t$.
+\end{lemma}
+
+\begin{proof}
+$\Rel_m$ refuses $e$ only when both popped entries carry one label, which by covering means one path in $s$ --- the move the exact automaton refuses. Renaming $b\mapsto a$ happens only when arcs labelled $a,b$ were just joined by the road, so equal labels still mean equal paths; a $\qq$ pop renames nothing, and an arc whose partner was joined to an unknown path is by construction not equal-labelled to anything it is not on a path with. A new arc labelled from a popped labelled arc lies on that arc's path in $t$; a fresh label is equal only to its twin. Reduction only replaces labels by $\qq$ or deletes entries, which preserves covering.
+\end{proof}
+
+The reduction ``a label occurring once becomes $\qq$'' loses nothing: such a label can never cause a refusal, and being renamed on a merge has no observable consequence. It divides the state count by $4$--$5$ at equal memory. Lemma~\ref{lem:sound} was also verified mechanically: over all exact states of width $\le12$, all their transitions, and all partial states covering them, for total memories $\le8$ and per-side memories $\le6$, no violation.
+
+\begin{corollary}\label{cor:upper}
+$R\le\rho(T_m)^2$ and $\Rb\le\rho(T_m)$, where $T_m$ is the transition matrix of $\Rel_m$ and $\rho$ its Perron root per crossing.
+\end{corollary}
+
+\begin{proof}
+For a closed meander of order $k$, the first $2k-1$ events of its word are accepted from the empty state (which covers everything) by induction with Lemma~\ref{lem:sound}; the last event closes the single loop and is the one refusal that is right. Distinct meanders have distinct words, so $M_k\le4\|T_m^{2k-1}\|_\infty$. For foldings, Lemma~\ref{lem:arch} reads a semi-meander of $n$ stamps as a word of $n$ events, single-sided at position $1$ and at position $q$; the root and the tail are single-ended paths and never close a cycle, so treating them as $\qq$ is a covering. With $A$ the matrix of single-sided events, $s(n)\le n\|A\|^2_\infty\|T_m^{n-2}\|_\infty$.
+\end{proof}
+
+The certificate is the Collatz--Wielandt inequality: for any strictly positive $w$, $\rho(T^2)\le\max_i(T^2w)_i/w_i$. We take $w=\lceil2^{40}v\rceil\vee1$ from the power-iterated right vector and evaluate $T^2w$ in exact integers, so incomplete convergence can only loosen the bound.
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+memory rule & orbit-states & $\rho(T_m^2)$ & certified $R\le$ & $\Rb\le$\\
+\midrule
+per side $k=1$ & 3 & 13.9282 & 13.9282 & 3.7320\\
+per side $k=4$ & 103 & 13.1412 & 13.1412 & 3.6251\\
+per side $k=7$ & 4\,301 & 12.8899 & 12.8899 & 3.5903\\
+per side $k=10$ & 50\,213 & 12.7680 & 12.7680 & 3.5733\\
+per side $k=14$ & 10\,469\,223 & 12.6768 & 12.6768 & 3.5605\\
+total $m=18$ & 243\,356 & 12.7120 & 12.7120 & 3.5654\\
+total $m=20$ & 1\,016\,670 & 12.6869 & 12.6869 & 3.5619\\
+total $m=22$ & 4\,233\,616 & 12.6656 & 12.6656 & 3.5589\\
+total $m=24$ & 17\,579\,062 & 12.6475 & 12.64749 & 3.5563\\
+total $m=26$ & 72\,808\,296 & 12.6318 & \textbf{12.63185} & \textbf{3.55414}\\
+\bottomrule
+\end{tabular}
+\caption{Forgetting relaxations. ``Per side $k$'' keeps the top $k$ entries of each stack; ``total $m$'' keeps $m$ entries overall, deepest of the taller side forgotten first. The $k\le7$ rows were computed both with and without the singleton reduction, with identical bounds.}\label{tab:upper}
+\end{table}
+
+\begin{proof}[Proof of Theorem~\ref{thm:upper}]
+For $m=26$ the integer vector $w$ satisfies
+\[\max_i\frac{(T_m^2w)_i}{w_i}=\frac{13888861889491}{2^{40}}=12.6318463\ldots\]
+(the maximum is attained at an entry with $w_i=2^{40}$); Corollary~\ref{cor:upper} and the right-vector lift give $R\le12.63185$ and $\Rb\le\sqrt{12.63185}$. The automaton was built independently in Python and in C, with identical state counts and eigenvalues at all memories where both were run.
+\end{proof}
+
+Already $k=7$ beats the 2005 bound in seconds. The total-memory rule is better per state than the per-side rule; two other rules --- forgetting the pair with the deepest shallow end, or with the largest depth sum --- are worse per state, because $\qq$ holes then accumulate in the middle of the stacks and multiply the state count. The decrements $0.025,0.021,0.018,0.016$ per two units of memory fall like $m^{-1.65}$; see \S\ref{sec:convergence}.
+
+\subsection{What the two bounds say together}
+\[
+11.5975\le R\le12.6319,\qquad 3.4055\le\Rb\le3.5542,
+\]
+against Jensen's $R\approx12.2629$, $\Rb\approx3.5019$. The $\Rb$ interval contains $\sqrt R$, as $\Rb=\sqrt R$ requires; its upper end is below $\sqrt{12.901}=3.592$, so the folding bound could not have been obtained from the old meander bound even if $\Rb\le\sqrt R$ were known.
+
+\section{Exact enumeration at bounded height}\label{sec:exact}
+
+Say a folding, or a meander, has \emph{height} $\le h$ if at most $h$ arcs are ever stacked on either side; for foldings ``depth $\le D$'' (no chain of $D+2$ mutually nested folds) is the same as height $\le D+1$. Bounding the height bounds the number of loose ends, hence the number of states of the scan automaton:
+
+\begin{theorem}\label{thm:rational}
+For every fixed $h$ the generating functions of closed meanders, open meanders and semi-meanders of height $\le h$ are rational.
+\end{theorem}
+
+The automaton also gives the functions explicitly. For semi-meanders we report the minimal recurrence certified by Berlekamp--Massey on more than twice as many terms as there are states, all checked against a brute-force folding enumerator that knows nothing of the arch model ($n\le26$ at height $2$, $n\le18$ at height $4$).
+
+\subsection{Height two: three faces of one automaton}
+At height $2$ (depth $1$) the semi-meander automaton has $18$ states, or, after collapsing the mirror symmetry of the root's side, three states before the last stamp and one after. Writing $y=x^2$:
+
+\begin{theorem}\label{thm:height2}
+\begin{enumerate}[nosep]
+\item Closed meanders of height $\le2$ number $2^{k-1}$; generating function $y/(1-2y)$.
+\item Open meanders of height $\le2$ with $m\ge1$ crossings number $F_m$ (Fibonacci); generating function $(1-x^2)/(1-x-x^2)$.
+\item Semi-meanders of height $\le2$ number, for $n\ge3$,
+\[
+s_1(n)=2F_{n+2}-\begin{cases}3\cdot2^{n/2}&n\text{ even}\\2^{(n+3)/2}&n\text{ odd,}\end{cases}
+\qquad\sum_{n}s_1(n)x^n=\frac{x^2(1+x-x^2+2x^3+2x^4)}{(1-x-x^2)(1-2x^2)}-1-x^2 .
+\]
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Before the last stamp appears the automaton has states $A=([\mathrm{root}],[\,])$, $B=([\mathrm{root},c],[c])$, $C=([\mathrm{root}],[c,c])$ (stacks on the root's side and the other side, $c$ a two-ended path) with transitions $A\to A,B$; $B\to C$; $C\to B,A$, giving $A(x)=(1-x^2)/(1-x-x^2)$, $B=x/(1-x-x^2)$, $C=x^2/(1-x-x^2)$: the pre-tail phase is Fibonacci. After the last stamp the only state $T$ (root and tail open on opposite sides) returns to itself in two positions in two ways or accepts in one, $\tau(x)=x/(1-2x^2)$. Entries into $T$ from $A,B,C$ use one or two positions; assembling, $G=x[xA+(A(x+x^2)+B(x+2x^2)+C(x+x^2))\tau]$, which simplifies to the stated function. Parts (1) and (2) are the tail phase and the pre-tail diagonal of the same automaton (see \S\ref{sec:structure}). Full details are in the supplementary notes.
+\end{proof}
+
+\subsection{Heights three and four}
+\begin{proposition}\label{prop:h34}
+With $y=x^2$ marking the order of closed meanders and $x$ the crossings of open meanders:
+\begin{align*}
+\text{closed, height}\le3:&\quad \frac{y(1-2y)^2}{1-6y+8y^2-2y^3}=y+2y^2+8y^3+34y^4+144y^5+608y^6+\cdots\\
+\text{closed, height}\le4:&\quad \frac{y(1-6y+8y^2-4y^3)(1-8y+17y^2-11y^3)}{(1-2y)(1-14y+69y^2-151y^3+164y^4-86y^5+16y^6)}\\
+&\qquad = y+2y^2+8y^3+42y^4+242y^5+1436y^6+8596y^7+\cdots\\
+\text{open, height}\le3:&\quad\frac{(1-x-2x^2+x^4)(1+x-2x^2+x^4)}{(1-x)(1-5x^2-x^3+5x^4-4x^6+x^8)}\\
+&\qquad =1+x+2x^2+3x^3+8x^4+14x^5+35x^6+65x^7+155x^8+\cdots
+\end{align*}
+Semi-meanders of height $\le3$ satisfy an order-$15$ recurrence with denominator
+\[(1-x)(1-6x^2+8x^4-2x^6)(1-5x^2-x^3+5x^4-4x^6+x^8);\]
+of height $\le4$ an order-$37$ recurrence with denominator
+\[(1-2x^2)(1-14x^2+69x^4-151x^6+164x^8-86x^{10}+16x^{12})\,P_{22}(x),\]
+where $P_{22}$ is the degree-$22$ polynomial of the supplementary notes; of height $\le5$ an order-$109$ recurrence. Closed meanders of width $\le4$ (total open arcs) have generating function $y(1-3y)^2/(1-8y+17y^2-8y^3)$.
+\end{proposition}
+
+Height $\le4$ already accounts for all meanders of order $\le4$ and $242$ of the $262$ of order $5$. The growth constants of the height-bounded semi-meanders, $\varphi\approx1.618,\ 2.134,\ 2.483,\ 2.722,\ 2.887$ for heights $2$ to $6$, are rigorous lower bounds on $\Rb$ but far from it; they are of interest for the structural reason explained next, not as bounds.
+
+\section{Structure: the two phases of a folding}\label{sec:structure}
+
+Let $\Ss_D$ be the sub-automaton of the semi-meander scan before the last stamp is read (one single-ended path, the root; stacks of height $\le D+1$), with spectral radius $\lambda_D$, and let $\Mm_D$ be the automaton in which every path is two-ended (no absent events), with spectral radius $\mu_D$.
+
+\begin{proposition}[phase decomposition]\label{prop:phase}
+The transfer matrix of the height-$\le D{+}1$ semi-meander automaton is block upper-triangular with respect to the position of the last stamp, so the denominator of $\sum_ns_D(n)x^n$ divides $\chi_{\mathrm{pre}}(x)\chi_{\mathrm{post}}(x)$, the reversed characteristic polynomials of the two blocks. Read from the bottom of the pile upward, the post-phase contains no single-ended path and is exactly $\Mm_D$, the height-bounded closed-meander automaton; hence $\chi_{\mathrm{post}}$ is a polynomial in $x^2$ (the post-phase is bipartite), and the tail factors of the denominators in \S\ref{sec:exact} are characteristic factors of $\Mm_D$, namely $1-2x^2$, $1-6x^2+8x^4-2x^6$ and $1-14x^2+\cdots+16x^{12}$ for $D=1,2,3$. The pre-phase diagonal $(I-x\Ss_D)^{-1}_{ii}$ at the start state is the generating function of open meanders of height $\le D+1$, which is why the open-meander denominators of Proposition~\ref{prop:h34} coincide with the pre-tail factors.
+\end{proposition}
+
+The naive version of this statement --- that after the last stamp no path labels are needed --- is false (at $D=2$, $40$ of the $46$ post-phase states contain a two-ended path); the correct statement is that the post-phase is \emph{root-free}, which makes it a meander problem rather than a folding problem.
+
+\begin{theorem}[sandwich]\label{thm:sandwich}
+For every $D\ge2$, $\ \mu_{D-1}\le\lambda_D\le\mu_{D+1}$. Consequently $\lim\lambda_D=\lim\mu_D$.
+\end{theorem}
+
+\begin{proof}
+Both inequalities are injections of event sequences. For $\lambda_D\le\mu_{D+1}$: insert a frozen arc at the bottom of the right stack of a state $X$ of $\Ss_D$, belonging to the root's path; the root now has two loose ends, so this is a state of $\Mm_{D+1}$, and every walk from $X$ is a walk from the new state (heights grow by one, the frozen arc is never popped, no new cycle can arise since one end of the root's path is frozen). Since $\Ss_D$ is strongly connected, walks from $X$ grow like $\lambda_D^k$, while walks in any finite automaton from any state grow at most like $k^c\mu^k$. For $\mu_{D-1}\le\lambda_D$: insert a frozen single-ended arc (a root) at the bottom of the right stack of a state in the dominant class of $\Mm_{D-1}$; the same three checks apply. Monotonicity of $\mu_D$ in $D$ and $\mu_D\le4$ give the limit.
+\end{proof}
+
+Computed values, for $D=1,2,\dots$:
+\begin{align*}\mu_D&=1.414,\ 2.053,\ 2.449,\ 2.700,\ 2.874,\ 2.996,\ 3.086,\ 3.154;\\ \lambda_D&=1.618,\ 2.134,\ 2.483,\ 2.722,\ 2.887;\end{align*} the data satisfy the sharper $\mu_D<\lambda_D<\mu_{D+1}$, whose lower half the proof does not give.
+
+\begin{theorem}\label{thm:limit}
+$\lim_D\lambda_D=\lim_D\mu_D=\sqrt R$.
+\end{theorem}
+
+\begin{proof}
+Let $b_n$ be the number of semi-meanders of $n$ stamps with stamp $n$ at the bottom of the pile. Deleting stamps $1$ and $n$ (which are hairpins) leaves an open meander with $n-2$ crossings, and the construction is reversible, so $b_n$ is A005316$(n-2)$; open meanders with $m$ crossings grow like $(\sqrt R)^m$ (cut an outermost arc of a closed meander; conversely join the two free ends around the outside). On the other hand $b_n$ is, up to the last step, the number of closed walks at the start state of the unbounded pre-phase automaton, and by the elementary half of the truncation theorem for irreducible non-negative matrices (Vere-Jones \cite{VereJones}; a direct proof is two lines: a closed walk of length $n$ has bounded height, so it lives in some $\Ss_D$, and Fekete) $\sup_D\lambda_D$ equals the growth rate of these closed walks. Theorem~\ref{thm:sandwich} carries the limit to $\mu_D$.
+\end{proof}
+
+\begin{remark}
+Theorem~\ref{thm:limit} says that bounded-height foldings converge to the \emph{meander} constant, and the gap to $\Rb$ is the content of the conjecture $\Rb=\sqrt R$: it holds iff semi-meanders with the last stamp at the bottom, which are open meanders, are not exponentially rare among all semi-meanders. In the language of \cite{DFGG96} this is the statement that the winding of a random semi-meander is sublinear (their $\nu<1$), which Di Francesco, Golinelli and Guitter identified and measured ($\nu=0.52(1)$); we rediscovered it before finding it there and claim nothing here beyond the bounded-height formulation. Our exact counts give $b_n/s(n)\sim n^{-1.44}$ for $10\le n\le18$ with no sign of an exponential factor.
+\end{remark}
+
+\section{What was tried and rejected}\label{sec:tried}
+
+We list the refinements of \S\S\ref{sec:lower}--\ref{sec:upper} that we implemented and found wanting, with the reason in each case. Code for all of them is in the repository (\S\ref{sec:repro}).
+
+\begin{enumerate}[leftmargin=*]
+\item \emph{Tilting the relaxation by width.} Since a meander's word returns to width $0$, $M_k$ is also bounded by the weighted count in which every (open,open) carries $\theta^2$ and every (close,close) $\theta^{-2}$, for any $\theta>0$. On $\Rel_m$ this is not a diagonal similarity (the true width is not a function of the reduced state), so $\min_\theta\rho(T_\theta)$ might beat $\theta=1$. It does not: at $m=14$, $\rho^2=12.78$ at $\theta=1$ against $12.89$ and $12.92$ at $\theta=0.95$ and $1.05$. Forgetting and phantom closes balance exactly at $\theta=1$.
+\item \emph{Coarse identities cannot forbid.} A superset automaton refuses a move only when it is certain that the two closed arcs are one path. Colours, parities, or side-of-partner bits for forgotten arcs never certify equality and therefore forbid nothing; weighting uncertain closures by a loop fugacity $q\in(0,1]$ (an upper bound since $M_k\le Z_k(q)/q$) is monotone in $q$ and optimal at $q=0$, the plain relaxation.
+\item \emph{Adaptive coarsening for upper bounds.} Truncating additionally every state whose Perron mass is in the lowest fraction $f$ gains about a third of a memory step at fixed size ($m=18$, $f=0.7$: $73\,000$ states, $12.729$, against $12.743$ for $m=16$ at $58\,000$ and $12.712$ for $m=18$ at $243\,000$); extending memory only in high-mass regions is worse than uniform memory at equal size. The Perron mass of $\Rel_m$ is not at the memory boundary ($47\%$ of it sits on fully-labelled states at $m=16$), so the excess over $R$ is accumulated ignorance of pairings born during wide excursions, which no cheap summary captures.
+\item \emph{Window certificates and prime meanders} for the lower bound: \S\ref{sub:lowertried}.
+\end{enumerate}
+
+\section{Do the forgetting bounds converge?}\label{sec:convergence}
+
+Write $\rho_m$ for the Perron root of $\Rel_m$ per crossing, so $R\le\rho_m^2$.
+
+\begin{proposition}\label{prop:mono}
+$\rho_m$ is non-increasing in $m$; hence $\rho_\infty=\lim_m\rho_m$ exists and $\rho_\infty\ge\sqrt R$. A word is accepted by $\Rel_m$ iff none of its loops is \emph{visible}, and every loop of an accepted word contains an arc that was open at a moment when the width exceeded $m$.
+\end{proposition}
+
+\begin{proof}
+The reduced state of $\Rel_m$ covers that of $\Rel_{m'}$ for $m'>m$, so by the argument of Lemma~\ref{lem:sound} the language of $\Rel_{m'}$ is contained in that of $\Rel_m$. A loop is visible when both arcs closing it carry the same label; this fails only if an arc of the loop's path was deleted by the memory rule, which requires more than $m$ entries, hence width $>m$, at that time.
+\end{proof}
+
+\begin{question}\label{q:conv}
+Is $\rho_\infty=\sqrt R$?
+\end{question}
+
+We could not settle it, and we think it is a genuine question rather than a technicality. A proof by surgery --- reconnect the $L$ loops of an accepted word into one and record the $L-1$ reconnections --- would need $L=o(n/\log n)$, but a single excursion to width $m+1$ makes \emph{every} older arc forgettable, so $\Theta(n)$ loops can be hidden at cost $O(m)$. Whether such words carry more entropy than meanders depends on the large-deviation cost of an exact prefix ending at width $\varepsilon n$ and on the entropy bonus per forgotten arc in the closing phase, neither of which is known; if the former is $o(\varepsilon)$, as it would be for random-walk-like width fluctuations, and the latter is bounded below, then $\rho_\infty>\sqrt R$. Proving $\rho_\infty>\sqrt R$ would in any case require a sub-language with growth provably above $R$, impossible while $R$ is known only to lie in $[11.5975,12.6319]$. Numerically, $\rho_m^2=12.7425,12.7120,12.6869,12.6656,12.6475,12.6319$ for $m=16,\dots,26$; the decrements fall like $m^{-1.65}$, i.e.\ $\rho_m^2-\rho_\infty^2\sim m^{-0.65}$, which extrapolates to $\rho_\infty^2\approx12.35$ with an uncertainty of at least $\pm0.1$ that contains $R\approx12.26$; a geometric fit would give $12.53$. The data neither confirm nor exclude convergence. A positive answer would make forgetting a complete method, converging to $R$ from above as the truncations do from below.
+
+\section{Reproducibility}\label{sec:repro}
+
+All programs (written with the AI system named in the declaration below, and reviewed by the author) are short C or Python files with no dependencies beyond a C compiler and NumPy/SciPy; they are available with the certificates at [repository URL]. For the lower bound, \texttt{grow.c} performs the adaptive selection and writes the state list and integer vector; \texttt{check.c} is an independently written checker with a different internal model (points on the cut line with a non-crossing partner matching rather than stacks of labels): it verifies that every listed state is well formed and canonical, rebuilds the transitions, computes the states reachable from $j_0$ inside the list, and evaluates $(T\ttop)^2v$ in exact integers. It reproduces the $140\,515\,511$ transitions of the final set and the certified ratio to all digits. The $W=28$ width truncation is \texttt{muq.c}. For the upper bound, \texttt{relax.c} builds $\Rel_m$ and certifies the Collatz--Wielandt ratio; \texttt{relax\_py.py} is an independent Python construction of the same automaton (identical state counts and eigenvalues for $m\le16$), and \texttt{relax\_check.py} is the mechanical verification of Lemma~\ref{lem:sound}. The exact generating functions come from \texttt{tmD.py} and \texttt{bounded\_meanders.py} with brute-force checks in \texttt{fold*.c} and \texttt{wbrute.py}. The $W=28$ run needs $2.5$~GB; the adaptive run and the $m=26$ relaxation each need about $6$~GB and a few hours on two cores. Both headline bounds improve with memory: on a $128$~GB machine the same code should certify roughly $R\ge11.67$ (adaptive selection at $4\cdot10^8$ states) and $R\le12.605$, $\Rb\le3.5504$ (memory $30$).
+
+\section*{Declaration of generative AI and AI-assisted technologies}
+This research and manuscript were produced in collaboration with an AI system (Claude, Anthropic, 2026). The AI system proposed methods, wrote and debugged the code, drafted proofs and text, and carried out the computations under the author's direction. The author set the goals and made all decisions on what to pursue, checked every theorem and proof, and reviewed the code and manuscript in full. Every numerical claim in Theorems~\ref{thm:lower} and~\ref{thm:upper} rests on an exact integer certificate that was recomputed by an independently written checker, and every exact generating function was confirmed by brute-force enumeration, as described in Section~\ref{sec:repro}. The author takes full responsibility for the content of this paper. Where results obtained in this way were subsequently found to exist in the literature --- in particular the escape-number and winding results that grew out of Sections~\ref{sec:exact}--\ref{sec:structure}, which are contained in \cite{DFGG96} --- they are cited and not claimed.
+
+\begin{thebibliography}{99}
+\bibitem{AlbertPaterson} M.~H.~Albert and M.~S.~Paterson, Bounds for the growth rate of meander numbers, \emph{J.\ Combin.\ Theory Ser.\ A} 112 (2005), no.~2, 250--262. doi:10.1016/j.jcta.2005.02.006
+\bibitem{BRS} G.~Barequet, G.~Rote and M.~Shalah, $\lambda>4$: an improved lower bound on the growth constant of polyominoes, \emph{Comm.\ ACM} 59 (2016), no.~7, 88--95. doi:10.1145/2851485
+\bibitem{Belousov} Yu.~Belousov, Prime factorization of meanders, preprint, arXiv:2112.10289 (2021).
+\bibitem{DGZZ} V.~Delecroix, \'E.~Goujard, P.~Zograf and A.~Zorich, Higher genus meanders and Masur--Veech volumes, \emph{Ann.\ Inst.\ Fourier}, published online (2024). doi:10.5802/aif.3759; arXiv:2304.02567
+\bibitem{DFGG96} P.~Di Francesco, O.~Golinelli and E.~Guitter, Meanders: a direct enumeration approach, \emph{Nuclear Phys.\ B} 482 (1996), 497--535. doi:10.1016/S0550-3213(96)00505-6
+\bibitem{DFGGTL} P.~Di Francesco, O.~Golinelli and E.~Guitter, Meanders and the Temperley--Lieb algebra, \emph{Comm.\ Math.\ Phys.} 186 (1997), 1--59. doi:10.1007/BF02885671
+\bibitem{DFGG00} P.~Di Francesco, O.~Golinelli and E.~Guitter, Meanders: exact asymptotics, \emph{Nuclear Phys.\ B} 570 (2000), 699--712.
+\bibitem{CIPSI} B.~Huron, J.~P.~Malrieu and P.~Rancurel, Iterative perturbation calculations of ground and excited state energies from multiconfigurational zeroth-order wavefunctions, \emph{J.\ Chem.\ Phys.} 58 (1973), no.~12, 5745--5759. doi:10.1063/1.1679199
+\bibitem{Jensen2000} I.~Jensen, A transfer matrix approach to the enumeration of plane meanders, \emph{J.\ Phys.\ A} 33 (2000), no.~34, 5953--5963. doi:10.1088/0305-4470/33/34/301
+\bibitem{JensenGuttmann} I.~Jensen and A.~J.~Guttmann, Critical exponents of plane meanders, \emph{J.\ Phys.\ A} 33 (2000), L187--L192.
+\bibitem{Koehler} J.~E.~Koehler, Folding a strip of stamps, \emph{J.\ Combin.\ Theory} 5 (1968), no.~2, 135--152. doi:10.1016/S0021-9800(68)80048-1
+\bibitem{LaCroix} M.~La Croix, Approaches to the enumerative theory of meanders, essay, University of Waterloo, 29 September 2003. \url{https://www.math.uwaterloo.ca/~malacroi/Latex/Meanders.pdf}
+\bibitem{LandoZvonkin} S.~K.~Lando and A.~K.~Zvonkin, Plane and projective meanders, \emph{Theoret.\ Comput.\ Sci.} 117 (1993), no.~1--2, 227--241. doi:10.1016/0304-3975(93)90316-L
+\bibitem{Legendre} S.~Legendre, Foldings and meanders, \emph{Australas.\ J.\ Combin.} 58 (2014), no.~2, 275--291.
+\bibitem{Lunnon} W.~F.~Lunnon, A map-folding problem, \emph{Math.\ Comp.} 22 (1968), no.~101, 193--199. doi:10.1090/S0025-5718-1968-0221957-8
+\bibitem{OEIS} OEIS Foundation Inc., The On-Line Encyclopedia of Integer Sequences, \url{https://oeis.org}, sequences A000136, A000682, A005315, A005316.
+\bibitem{ReedsShepp} J.~Reeds, L.~Shepp and D.~McIlroy, Numerical bounds for the Arnol'd ``meander'' constant, unpublished manuscript (1999); cited in \cite{OEIS}, A005315.
+\bibitem{SawadaLi} J.~Sawada and R.~Li, Stamp foldings, semi-meanders, and open meanders: fast generation algorithms, \emph{Electron.\ J.\ Combin.} 19 (2012), no.~2, Paper P43. doi:10.37236/2404
+\bibitem{Uehara} R.~Uehara, Stamp foldings with a given mountain-valley assignment, in: \emph{Origami$^5$: Fifth International Meeting of Origami Science, Mathematics, and Education} (P.~Wang-Iverson, R.~J.~Lang and M.~Yim, eds.), A K Peters/CRC Press, Boca Raton, 2011, pp.~585--597.
+\bibitem{Hull} T.~C.~Hull, A.~Ibrahim, J.~Paltrowitz, N.~Ter-Saakov and G.~Wang, The stamp folding problem from a mountain-valley perspective: enumerations and bounds, \emph{Discrete Math.\ Theor.\ Comput.\ Sci.} 27 (2025), no.~3, article 16.
+\bibitem{VereJones} D.~Vere-Jones, Ergodic properties of nonnegative matrices. I, \emph{Pacific J.\ Math.} 22 (1967), no.~2, 361--386. doi:10.2140/pjm.1967.22.361
+\end{thebibliography}
+
+% ------------------------------------------------------------------
+% Items to verify before submission (kept here so they travel with the source):
+%  1. Lemma 2.2 (reachability in <= w crossings): the general construction is sketched; either write it out or state "verified for w<=10" only.
+%  2. Table 1: the W=26 orbit-state count (13,544,435) is the quotient of 27,088,870 full states; confirm from the run log.
+%  3. Proposition 5.3: copy P_22 and the height-5 recurrence from results/ if the referee wants them in the paper; else keep in supplement.
+%  4. Theorem 5.5 proof: the Vere-Jones citation covers the truncation statement; the "direct proof" is Lemma D of the notes.
+%  5. Remark after Thm 5.5: cite DFGG eq. (2.11) and their Fig. 4 for the winding definition.
+%  6. Semi-meander bound: run a final literature search for "upper bound" on A000682 / stamp foldings (Koehler 1968 may contain a crude one).
+%  7. Repository URL and the AI-use statement.
+% ------------------------------------------------------------------
+\end{document}

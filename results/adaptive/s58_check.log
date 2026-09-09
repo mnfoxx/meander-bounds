@@ -1,0 +1,6 @@
+states: 58398791, malformed/non-canonical: 0
+j0 index 0, v[j0]=607287437688832
+edges inside S: 140515511
+reachable from j0 inside S: 58398791 of 58398791 (certificate is evaluated on the reachable subset)
+positive entries 58398791; min_i ((T^T)^2 v)_i / v_i = 3500486230016/301830176768 = 11.597535632
+CERTIFICATE OK: R >= 11.597535632
