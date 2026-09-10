@@ -425,7 +425,7 @@ The $W=28$ eigenvector was computed in five checkpointed legs of $\approx170$ po
 
 §12 truncated the closed-meander automaton to states of width $\le W$. The mass diagnostic there (Perron mass peaks near width $16$ at $W=24$, only $\approx3\%$ on the boundary) suggested that a width cut keeps many states that contribute almost nothing while discarding, at the boundary, a few that matter. This section replaces the width cut by a *selected* set of states, chosen adaptively, and shows that the resulting certificates are better per state by roughly one full width step: with $30\cdot10^6$ orbit-states it already beats the $W=28$ certificate of §12 ($52\cdot10^6$ orbit-states), and $58\cdot10^6$ states certify $11.5975$, and with $14\cdot10^6$ it beats $W=26$ ($13.5\cdot10^6$) by $0.065$ where the $W=26\to28$ step is $0.092$.
 
-**Theorem K.** $R \ge 11.59753$. *(Certificate: $58\,398\,791$ orbit-states, all of width $\le32$, with the integer vector $v$; $c=3500486230016/301830176768$. Files `s58_states.bin`, `s58_vec.bin` (1.6 GB, kept outside the zip); verified by the independent checker `src/check.c`, output in `results/adaptive/s58_check.log`.)*
+**Theorem K.** $R \ge 11.60805$. *(Certificate: $55\,781\,199$ orbit-states, all of width $\le32$, with the integer vector $v$; $c=803642589184/69231468544$; computed on the author's laptop, see the addendum in §13.3. Files `s58_states.bin`, `s58_vec.bin` (1.6 GB, GitHub release v1.0); verified by the independent checker `src/check.c`. An earlier cloud run gave $R\ge11.59753$ on $58\,398\,791$ states, `results/adaptive/s58_check.log`.)*
 
 ### 13.1 Sub-automaton certificates
 
@@ -467,9 +467,13 @@ All values are rigorous certificates ($c$ from the exact integer computation; th
 | adaptive, core 14 M + 2-step frontier | 55.27 M | 11.5897 | 193002846208/16661409792 | 11.58382 (150 it.) |
 | adaptive, pruned | 30.07 M | 11.5529 | 347897499648/30126884864 | 11.54774 |
 | adaptive, pruned (final of run) | 40.06 M | 11.5969 | 136407019520/11775848448 | 11.58363 |
-| adaptive, core 30 M + frontier, 550 it. | 58.40 M | 11.5990 | 3500486230016/301830176768 | **11.59753** |
+| adaptive, core 30 M + frontier, 550 it. (cloud) | 58.40 M | 11.5990 | 3500486230016/301830176768 | 11.59753 |
+| adaptive, pruned (laptop reproduction, 10 Sep) | 30.03 M | 11.5677 | 233799364608/20218146816 | 11.56384 |
+| adaptive, core 30 M + frontier, 400 it. (laptop) | 55.78 M | 11.6084 | 803642589184/69231468544 | **11.60805** |
 
-(Entries marked "$n$ it." are certificates taken after only $n$ warm-started power iterations at intermediate stages of the run; they are valid bounds but not converged. The final row is the stage-10 set of the run re-iterated to convergence, `./grow -1 32 400 s58` from its checkpoint.)
+(Entries marked "$n$ it." are certificates taken after only $n$ warm-started power iterations at intermediate stages of the run; they are valid bounds but not converged. The cloud row is the stage-10 set of the run re-iterated to convergence, `./grow -1 32 400 s58` from its checkpoint.)
+
+**Addendum, 10 September 2026 (laptop reproduction; this is now Theorem K and Theorem 1.1 of the paper).** The author re-ran the full schedule `grow 20 32 150 s58 -1 -1 1000000 -1 -1 2000000 -1 -1 3500000 -1 -1 3500000 -1 -1 3500000 -1 -1 7000000 -1 -1 14000000 -1 -1 14000000 -1 30000000 …` on an Apple-silicon MacBook Pro in one unbroken pass, interrupted it at the 30 M core (STAGE 26: 30,034,282 states, certified 11.55835 after 150 it.), and resumed with one full-frontier expansion, `grow -1 32 400 s58 -1`. The core expanded to 55,781,199 states (137,423,195 transitions; widths 30 and 32 carry 17.75 M and 16.26 M states against 19.83 M and 13.61 M in the cloud set) and after 400 iterations certified $c = 803642589184/69231468544 = 11.6080534\ldots$, with all 55,781,199 entries positive. The independent checker `check.c` on the same laptop reported all states well formed and canonical, all reachable from $j_0$, the same transition count, and the same rational (`results/adaptive/s58_check_laptop.log`). The improvement over the cloud certificate (fewer states, higher bound) is attributed to the core: the cloud set was assembled over several resumed runs with fewer iterations per stage, so its 30 M core was slightly less well annealed. Two independent runs of the same construction agreeing to within 0.01 is recorded here as a consistency check. Headline: $R \ge 11.60805$, hence $\bar R \ge 3.4070$.
 
 Per state, then, the adaptive sets are worth about one width step: $14\cdot10^6$ adaptive states ($11.519$) sit between width $26$ ($11.454$, $13.5\cdot10^6$) and width $28$ ($11.545$, $52\cdot10^6$), closer to the latter; $58\cdot10^6$ adaptive states give $11.599$, roughly what §12's extrapolation predicted for width $30$ ($\approx11.62$ at $4\cdot10^8$ states) minus a third of a step. The same machine budget therefore reaches the equivalent of $W\approx29.5$.
 
@@ -538,7 +542,7 @@ The decrements $0.030,\,0.025,\,0.021,\,0.018,\,0.016$ per two units of memory s
 
 ### 14.3 What the two bounds say together
 
-$$11.5975\ \le\ R\ \le\ 12.6319,\qquad 3.4055\ \le\ \bar R\ \le\ 3.5542,$$
+$$11.6080\ \le\ R\ \le\ 12.6319,\qquad 3.4070\ \le\ \bar R\ \le\ 3.5542,$$
 with $R\approx12.2629$, $\bar R\approx3.5019$ (Jensen). The $\bar R$ interval contains $\sqrt R\approx3.5018$, as the conjecture $\bar R=\sqrt R$ requires; note that its upper end is *below* $\sqrt{12.901}=3.592$, i.e. the semi-meander bound could not have been obtained from the old meander bound even if $\bar R\le\sqrt R$ were known.
 
 ### 14.4 Remarks and directions

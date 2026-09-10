@@ -22,10 +22,11 @@ Code src/relax.c (memory ≤ 28 fits 7 GB up to m=26), independent Python build 
 src/relax_check.py. m=7 per side (4301 states, seconds) already beats 12.901. Increments shrink ×0.85 per two
 units of memory → this family stalls near 12.5; keeping partial information about deep arcs is the next idea.
 Also §14.4: prime-meander identity M = P/(1−2P) (sewing has unique factorisation) — small remark, likely known.
-Current two-sided picture: 11.5975 ≤ R ≤ 12.6319 (est. 12.2629); 3.4055 ≤ R̄ ≤ 3.5542 (est. 3.5019).
+Current two-sided picture: 11.6080 ≤ R ≤ 12.6319 (est. 12.2629); 3.4070 ≤ R̄ ≤ 3.5542 (est. 3.5019).
+(10 Sep 2026: headline lower bound is now the author's laptop certificate, R ≥ 11.60805 on 55,781,199 states; see notes §13.3 addendum. The cloud certificate R ≥ 11.59753 on 58,398,791 states remains as an independent confirmation.)
 
 ## 1. The headline theorem (NEW, publishable)
-**UPDATE (notes §13, Theorem K): R ≥ 11.59753**, certified on an ADAPTIVELY SELECTED set of 58,398,791
+**UPDATE (notes §13, Theorem K): R ≥ 11.60805** (laptop, 55,781,199 states; earlier cloud certificate 11.59753 on 58,398,791
 orbit-states (widths ≤ 32), computed on a 2-core / 7 GB machine. Method: select states by Perron mass
 a_i·b_i (first-order sensitivity of ρ to deleting the state), score frontier states by the same product
 estimated from their in-set neighbours (CIPSI-style "selected configuration interaction"), expand/prune in
@@ -104,7 +105,7 @@ stacked on either side of the pile (= height ≤ D+1). y = x².
 ## 6. Paper plan
 Title idea: "Bounded-width transfer matrices for meanders: an improved lower bound on the meander
 constant, and exact generating functions at small height."
-Title now: "Transfer-matrix bounds for meanders and stamp foldings: 11.5975 ≤ R ≤ 12.6319, R̄ ≤ 3.5542,
+Title now: "Transfer-matrix bounds for meanders and stamp foldings: 11.6080 ≤ R ≤ 12.6319, R̄ ≤ 3.5542,
 and exact generating functions at small height" (or similar). Sections: 1 intro & statement;
 3c upper bounds by forgetting (§14: relaxed automaton, Lemma L1, table, semi-meander corollary); 2 the automaton and its verification; 3 the certificate
 argument (Fekete + reachability + quotient lemma + Lemma K1 for arbitrary state sets) with the rational
@@ -146,7 +147,7 @@ src/relax_check.py        mechanical simulation check of Lemma L1 (exact width �
 src/prime.py, irred.py    prime-meander decomposition experiments (M = P/(1−2P))
 results/relax/            run logs
 src/adapt.c               pilot: top-K-by-mass subsets of a fixed-W automaton vs width baselines (§13)
-src/grow.c                ADAPTIVE selection (expand/prune cycles, chunked frontier, checkpoints) — produced R ≥ 11.59753
+src/grow.c                ADAPTIVE selection (expand/prune cycles, chunked frontier, checkpoints) — produced R ≥ 11.60805 (laptop) / 11.59753 (cloud)
 src/check.c               independent certificate checker (cut-line/partner model, BFS reachability, exact integers)
 results/adaptive/         stage logs of the runs, converged s58 log, checker output
 src/escape.c, escape2.c   winding (escape number) distributions (DFGG territory)
