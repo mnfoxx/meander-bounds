@@ -35,6 +35,7 @@ Escape numbers (notes §10): R̄ = √R ⟸ E[e(F_n)] = o(n). Mean e: 2.52 (n=8)
 
 ## Meander constant lower bound (certified)
 W=20: 11.04139; W=22: 11.20795; W=24: 11.34221; W=26: 11.45295; W=28: R >= 11.54507 (Albert–Paterson 2005: 11.380).
-Adaptive selection (notes §13): 3.5M states 11.40008; 30M 11.54774; 40M 11.58363; 58.4M **R >= 11.59753** (Theorem K).
-Upper bounds (notes §14): per-side k=7: 12.8899; total memory m=20: 12.6869; m=22: 12.6656; m=24: **R <= 12.63185**, hence **R̄ <= 3.55413**.
-Two-sided: 11.5975 <= R <= 12.6319 ; 3.4055 <= R̄ <= 3.5542.
+Adaptive selection (notes §13): 3.5M states 11.40008; 30M 11.54774; 40M 11.58363; 58.4M 11.59753 (cloud run).
+Laptop reproduction, 10 Sep 2026 (notes §13.3 addendum): 30.03M core 11.56384; core + full frontier 55.78M **R >= 11.60805** (Theorem K; certificate in GitHub release v1.0, check log `adaptive/s58_check_laptop.log`).
+Upper bounds (notes §14): per-side k=7: 12.8899; total memory m=20: 12.6869; m=22: 12.6656; m=26: **R <= 12.63185**, hence **R̄ <= 3.55414**.
+Two-sided: 11.6080 <= R <= 12.6319 ; 3.4070 <= R̄ <= 3.5542.
