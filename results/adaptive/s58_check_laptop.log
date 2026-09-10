@@ -1,0 +1,9 @@
+$ ./check s58        (MacBook Pro, Apple silicon, 10 September 2026; certificate produced by
+                      grow 20 32 150 s58 <schedule>, interrupted at STAGE 26 (30,034,282 states),
+                      then grow -1 32 400 s58 -1)
+states: 55781199, malformed/non-canonical: 0
+j0 index 0, v[j0]=513385896607744
+edges inside S: 137423195
+reachable from j0 inside S: 55781199 of 55781199 (certificate is evaluated on the reachable subset)
+positive entries 55781199; min_i ((T^T)^2 v)_i / v_i = 803642589184/69231468544 = 11.608053477
+CERTIFICATE OK: R >= 11.608053477
