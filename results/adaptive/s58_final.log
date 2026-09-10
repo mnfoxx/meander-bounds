@@ -1,0 +1,41 @@
+resumed 30034282 states
+   it 25 lam 11.56783725
+   it 50 lam 11.56778696
+   it 75 lam 11.56774563
+   it 100 lam 11.56771075
+   it 125 lam 11.56767914
+   certificate positive entries 21936717 of 30034282
+STAGE 0: states=30034282 edges=71394145 rho_est=11.56767022 CERTIFIED rho(T^2) >= 233799364608/20218146816 = 11.56383751  [166s]
+  widths: 2:2 4:6 6:19 8:66 10:236 12:868 14:3235 16:12190 18:46251 20:174807 22:625990 24:1976063 26:4824208 28:8019454 30:8659271 32:5691616
+  pass 0 chunk 0/4: frontier entries 6436910
+  pass 0 chunk 1/4: frontier entries 6438294
+  pass 0 chunk 2/4: frontier entries 6437804
+  pass 0 chunk 3/4: frontier entries 6433909
+  frontier 25746917, tau=-1
+  kept 30034282 of S
+  pass 1 chunk 0/4: frontier entries 6436910
+  pass 1 chunk 1/4: frontier entries 6438294
+  pass 1 chunk 2/4: frontier entries 6437804
+  pass 1 chunk 3/4: frontier entries 6433909
+  stage 0 -> 55781199 states, 137423195 edges [670s]
+   it 25 lam 11.58923955
+   it 50 lam 11.60248163
+   it 75 lam 11.60497944
+   it 100 lam 11.60823358
+   it 125 lam 11.60825302
+   it 150 lam 11.60825950
+   it 175 lam 11.60826920
+   it 200 lam 11.60828219
+   it 225 lam 11.60829600
+   it 250 lam 11.60830899
+   it 275 lam 11.60831954
+   it 300 lam 11.60832928
+   it 325 lam 11.60833657
+   it 350 lam 11.60834470
+   it 375 lam 11.60834958
+   it 400 lam 11.60835444
+   certificate positive entries 55781199 of 55781199
+STAGE 1: states=55781199 edges=137423195 rho_est=11.60835444 CERTIFIED rho(T^2) >= 803642589184/69231468544 = 11.60805348  [1182s]
+  widths: 2:2 4:6 6:19 8:66 10:236 12:868 14:3235 16:12190 18:46252 20:176331 22:655789 24:2206512 26:6116760 28:12558668 30:17748022 32:16256243
+   certificate positive entries 55781199 of 55781199
+FINAL: states=55781199 CERTIFIED rho(T^2) >= 803642589184/69231468544 = 11.60805348 => R >= 11.608053 (written s58_*.bin)
