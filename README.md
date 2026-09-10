@@ -2,7 +2,7 @@
 
 Code, certificates and notes for the paper
 
-> M. Fox, *Transfer-matrix bounds for meanders and stamp foldings: 11.5975 ≤ R ≤ 12.6319 and R̄ ≤ 3.5542* (2026).
+> M. Fox, *Transfer-matrix bounds for meanders and stamp foldings: 11.6080 ≤ R ≤ 12.6319 and R̄ ≤ 3.5542* (2026).
 
 `R` is the growth constant of closed meanders (OEIS A005315) and `R̄` that of semi-meanders / stamp foldings (A000682, A000136). The previous rigorous bounds were 11.380 ≤ R ≤ 12.901 (Albert–Paterson 2005) and 3.065 ≤ R̄ ≤ 4 (Uehara 2011).
 
@@ -15,24 +15,26 @@ Code, certificates and notes for the paper
 | `src/` | all programs (C and Python; see below) |
 | `results/` | run logs, certificate summaries, exact generating functions |
 
-The lower-bound certificate itself (`s58_states.bin`, 58,398,791 state records of 20 bytes, and `s58_vec.bin`, the integer vector) is 1.6 GB and is distributed as a release asset, not in the tree.
+The lower-bound certificate itself (`s58_states.bin`, 55,781,199 state records of 20 bytes, and `s58_vec.bin`, the integer vector) is 1.6 GB and is distributed as a release asset, not in the tree.
 
 ## Reproducing the two headline bounds
 
 Everything needs only `gcc`; the Python scripts need NumPy and SciPy. A 2-core machine with 7 GB of RAM suffices.
 
-**Lower bound, R ≥ 11.59753** (adaptive selection, notes §13, paper §3):
+**Lower bound, R ≥ 11.60805** (adaptive selection, notes §13, paper §3):
 
     gcc -O2 -o grow src/grow.c -lm
     ./grow 20 32 150 run -1 -1 1000000 -1 -1 2000000 -1 -1 3500000 -1 -1 3500000 -1 -1 3500000 \
                         -1 -1 7000000 -1 -1 14000000 -1 -1 14000000 -1 30000000 40000000 40000000
-    # ~3 h; each stage prints a certified bound. Re-iterate the best stage to convergence:
-    ./grow -1 32 400 run            # resumes from run_ck_*.bin, writes run_states.bin / run_vec.bin
+    # each stage prints a certified bound. Interrupt (Ctrl-C) as soon as the 30 M-state core has been
+    # printed (the line "STAGE 26: states=300..."); its checkpoint is then in run_ck_*.bin. Then add the
+    # core's full one-step frontier and iterate to convergence (~55.8 M states, ~6 GB, ~1 h):
+    ./grow -1 32 400 run -1         # resumes from run_ck_*.bin, writes run_states.bin / run_vec.bin
 
 **Independent check of a lower-bound certificate** (different state model, exact integers):
 
     gcc -O2 -o check src/check.c
-    ./check s58                      # reads s58_states.bin, s58_vec.bin; prints "CERTIFICATE OK: R >= 11.597535632"
+    ./check s58                      # reads s58_states.bin, s58_vec.bin; prints "CERTIFICATE OK: R >= 11.608053477"
 
 **Upper bounds, R ≤ 12.63185 and R̄ ≤ 3.55414** (forgetting relaxation, notes §14, paper §4):
 
